@@ -1,0 +1,19 @@
+# [Build, test and package tools]
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.egg-info
+**/*pytest_cache
+
+# [Data files]
+data/*
+# Specific file not included in the original dataset.
+!data/BRAS/
+data/BRAS/*
+!data/BRAS/mesh_data.json
+!data/BRAS/source_receiver_positions.json
+
+# [Run files]
+run
+build

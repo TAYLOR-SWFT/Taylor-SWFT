@@ -1,0 +1,7 @@
+name: taylor-env
+channels:
+  - defaults
+dependencies:
+  - pip
+  - pip:
+    - -e .[test]
