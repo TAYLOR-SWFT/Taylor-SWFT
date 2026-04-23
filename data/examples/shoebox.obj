@@ -1,0 +1,33 @@
+# Shoebox OBJ
+
+o Shoebox
+
+# Vertices (width=2, depth=1, height=1)
+v -1.0 -0.5  0.0
+v  1.0 -0.5  0.0
+v  1.0  0.5  0.0
+v -1.0  0.5  0.0
+v -1.0 -0.5  1.0
+v  1.0 -0.5  1.0
+v  1.0  0.5  1.0
+v -1.0  0.5  1.0
+
+# Faces (6 quads, CCW from outside)
+
+# Bottom
+f 1 2 3 4
+
+# Top
+f 5 8 7 6
+
+# Front
+f 1 5 6 2
+
+# Right
+f 2 6 7 3
+
+# Back
+f 3 7 8 4
+
+# Left
+f 4 8 5 1

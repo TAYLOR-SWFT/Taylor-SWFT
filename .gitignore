@@ -13,6 +13,7 @@ data/*
 data/BRAS/*
 !data/BRAS/mesh_data.json
 !data/BRAS/source_receiver_positions.json
+!data/examples
 
 # [Run files]
 run

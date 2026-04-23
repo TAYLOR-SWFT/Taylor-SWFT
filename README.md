@@ -1,5 +1,5 @@
-![Python Version](https://img.shields.io/badge/python-3.14-blue)
-[![Tests](https://github.com/TAYLOR-SWFT/Taylor-SWFT/actions/workflows/tests.yml/badge.svg)](https://github.com/TAYLOR-SWFT/Taylor-SWFT/actions/workflows/tests.yml)
+![Python Version](https://img.shields.io/badge/python-3.14-blue) 
+[![Tests](https://github.com/LouisLalay/Taylor-SWFT/actions/workflows/tests.yml/badge.svg)](https://github.com/LouisLalay/Taylor-SWFT/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Taylor SWFT
@@ -10,13 +10,9 @@
 
 Download the repository:
 ```sh
-git clone https://github.com/TAYLOR-SWFT/Taylor-SWFT.git
+git clone https://github.com/LouisLalay/Taylor-SWFT.git
 ```
 Install the package:
-```sh
-pip install -e .[test] # or simply . if you do not run tests.
-```
-or with `conda`:
 ```sh
 conda env create -f conda_env.yaml
 ```
@@ -68,37 +64,36 @@ data/BRAS/
 │           │   └── Details
 │           └── RIRs
 │               └── wav
-└── 3 Surface descriptions
-│   ├── _csv
-│   │   ├── fitted_estimates
-│   │   └── initial_estimates
-│   ├── _descr
-│   ├── _img
-│   └── _plots
+├── 3_surface_descriptions
+│    └── 3 Surface descriptions
+│        ├── _csv
+│        │   ├── fitted_estimates
+│        │   └── initial_estimates
+│        ├── _descr
+│        ├── _img
+│        └── _plots
 ├── mesh_data.json
 └── source_receiver_positions.json
 ```
-_For any question about `mesh_data.json` and `source_receiver_positions.json`, please contact us._
+For any question about `mesh_data.json` and `source_receiver_positions.json`, please contact us._
 
 When everything is installed, you can run `pytest` to ensure the installation is correct and then run the `main` file. 
 _For faster runs you can lower the number of wanted sources for the ISM baseline._
 
 # Reference
-If this work has been useful to you, please cite this paper:
+If this work has been useful to you, please cite [this paper](https://hal.science/hal-05600183):
 ```
-@article{,
-  author  = ,
-  title   = ,
-  journal = ,
-  volume  = ,
-  number  = ,
-  pages   = ,
-  year    = ,
-  month   = ,
-  issn    = ,
-  doi     = ,
-  url     = ,
-  eprint  = 
+@unpublished{rodrigues:hal-05600183,
+  title       = {{Taylor-SWFT: fast discrete Statistical Wave Field Theory using Taylor expansion for late reverberation Work under review}},
+  author      = {Rodrigues, Marius and Lalay, Louis and Badeau, Roland and Richard, Ga{\"e}l and Fontaine, Mathieu},
+  url         = {https://hal.science/hal-05600183},
+  note        = {working paper or preprint},
+  year        = {2026},
+  month       = Mar,
+  keywords    = {reverberation statistical wave field theory dynamic room acoustic simulation physics-based models ; reverberation ; statistical wave field theory ; dynamic room acoustic simulation ; physics-based models},
+  pdf         = {https://hal.science/hal-05600183v1/file/hal.pdf},
+  hal_id      = {hal-05600183},
+  hal_version = {v1}
 }
 ```
 
