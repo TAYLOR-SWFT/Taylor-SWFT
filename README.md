@@ -1,5 +1,5 @@
 ![Python Version](https://img.shields.io/badge/python-3.14-blue) 
-[![Tests](https://github.com/LouisLalay/Taylor-SWFT/actions/workflows/tests.yml/badge.svg)](https://github.com/LouisLalay/Taylor-SWFT/actions/workflows/tests.yml)
+[![Tests](https://github.com/TAYLOR-SWFT/Taylor-SWFT/actions/workflows/tests.yml/badge.svg)](https://github.com/TAYLOR-SWFT/Taylor-SWFT/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # Taylor SWFT
@@ -10,7 +10,7 @@
 
 Download the repository:
 ```sh
-git clone https://github.com/LouisLalay/Taylor-SWFT.git
+git clone https://github.com/TAYLOR-SWFT/Taylor-SWFT.git
 ```
 Install the package:
 ```sh
