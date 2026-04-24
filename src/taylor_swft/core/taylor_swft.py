@@ -124,6 +124,10 @@ class Reverberator:
         """
         # Computing early echoes
         early = self.get_early_echoes_at_point(point, source_point, reflection_order=1)
+        if early.shape[0] == 0:
+            # If there are no early reflections, rescaling is impossible
+            self.full_rir_rt = torch.zeros_like(self.late_rir_rt)
+            return self.full_rir_rt.shape[0]
 
         # Blending in with late reverberation
         s = self.estimate_scaling_factor(early, self.late_rir, window_size=0.001)
@@ -163,6 +167,10 @@ class Reverberator:
         Returns:
             Tuple of (blended_early, blended_late) tensors ready for summation.
         """
+        if early.shape[0] == 0:
+            # If there are no early reflections, return zeros for early and late (no scaling can be estimated)
+            return torch.tensor([0.0]), torch.zeros_like(late)
+
         s = self.estimate_scaling_factor(early, late, window_size=0.001)
         early_max = torch.argmax(torch.abs(early)).item()
         start, end = early_max, early.shape[0]
@@ -247,20 +255,23 @@ class Reverberator:
                 tok = perf_counter()
                 t_miror = tok - tik
 
-                tik = perf_counter()
-                ir_ism = compute_ism_rir(
-                    self.room.room.sources[0],
-                    point,
-                    None,
-                    visibility[0][0, :],
-                    pra_constants.get("frac_delay_length"),
-                    self.room.room.c,
-                    self.room.room.fs,
-                    self.room.room.octave_bands,
-                    air_abs_coeffs=self.room.room.air_absorption,
-                    min_phase=self.room.room.min_phase,
-                )
-                tok = perf_counter()
+                if np.all(visibility[0] == 0):
+                    return torch.tensor([])
+                else:
+                    tik = perf_counter()
+                    ir_ism = compute_ism_rir(
+                        self.room.room.sources[0],
+                        point,
+                        None,
+                        visibility[0][0, :],
+                        pra_constants.get("frac_delay_length"),
+                        self.room.room.c,
+                        self.room.room.fs,
+                        self.room.room.octave_bands,
+                        air_abs_coeffs=self.room.room.air_absorption,
+                        min_phase=self.room.room.min_phase,
+                    )
+                    tok = perf_counter()
                 t_rir = tok - tik
 
                 tik = perf_counter()
@@ -349,6 +360,9 @@ class Reverberator:
             reflection_order=order,
             source_point=source_point,
         )
+        if early.shape[0] == 0:
+            return torch.zeros_like(late)
+
         s = self.estimate_scaling_factor(early, late, window_size=scaling_window_size)
         argmax_early = torch.argmax(torch.abs(early)).item()
         start_fed_in = int(argmax_early)
