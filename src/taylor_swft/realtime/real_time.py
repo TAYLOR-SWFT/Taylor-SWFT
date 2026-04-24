@@ -3,6 +3,7 @@ from ..utils.custom_typing import PointType
 from torch import Tensor
 from torchaudio.functional import fftconvolve
 import torch
+from numpy.typing import NDArray
 
 
 def convolve_one_buffer(source: Tensor, ir: Tensor, buffer_size: int) -> Tensor:
@@ -162,7 +163,7 @@ class SWFTContext:
         self.output_queue = []
 
     def process_next_buffer(
-        self, input_buffer: Tensor, mic_pos: PointType, source_pos: PointType
+        self, input_buffer: Tensor, mic_pos: NDArray, source_pos: NDArray
     ) -> Tensor:
         """
         Process the next audio buffer.
@@ -189,12 +190,28 @@ class SWFTContext:
 
         modes_ir = self.rev.get_modes_at_point(mic_pos)
 
+        if torch.norm(torch.tensor(source_pos - mic_pos)) < 0.5:
+            # If the source is very close to the microphone, we move it slightly to avoid numerical issues in the ISM computation of early echoes
+            torch.manual_seed(
+                0
+            )  # this ensures that the random direction is the same between successive buffers
+            random_direction = torch.randn(3)
+            random_direction /= torch.norm(random_direction)
+            source_pos = mic_pos + random_direction.numpy() * 0.5
+            while not self.rev.room.is_inside(source_pos):
+                random_direction = torch.randn(3)
+                random_direction /= torch.norm(random_direction)
+                source_pos = mic_pos + random_direction.numpy() * 0.5
+
         early_echoes_ir = self.rev.get_early_echoes_at_point(
             mic_pos,
             source_pos,
             method="ism",
             reflection_order=self.reflection_order,
         )
+
+        # clamp the early echoes to avoid extreme values whene the source is very close to the microphone
+        early_echoes_ir = torch.clamp(early_echoes_ir, -0.3, 0.3)
 
         # Apply the cross_fade between the early and late parts
         early_echoes_ir, late_coloration = self.rev.blend_early_late(
