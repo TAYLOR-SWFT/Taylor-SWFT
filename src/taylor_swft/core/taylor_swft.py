@@ -4,6 +4,7 @@ from ..utils import constants
 from ..utils.custom_typing import PointType
 from pyroomacoustics.parameters import constants as pra_constants
 from pyroomacoustics.simulation import compute_ism_rir
+from pyroomacoustics.soundsource import SoundSource
 from scipy.interpolate import PchipInterpolator
 from time import perf_counter
 from torch import Tensor
@@ -226,10 +227,13 @@ class Reverberator:
                 if len(self.room.room.sources) == 0:
                     self.room.room.add_source(source_point)
                 else:
-                    self.room.room.sources[0].position = source_point
+                    self.room.room.sources[0] = SoundSource(source_point)
 
                 self.room.room.max_order = reflection_order
-                self.room.room._update_room_engine_params()
+                self.room.room._init_room_engine()
+                self.room.room.room_engine.add_mic(
+                    self.room.room.mic_array.R[:, None, 0]
+                )
 
                 tok = perf_counter()
                 t_init = tok - tik
@@ -395,9 +399,8 @@ class Reverberator:
         late_windows = late[win_start_samples_expanded]
         early_energy = torch.sum(early_windows**2, dim=1)
         late_energy = torch.sum(late_windows**2, dim=1)
-        discard_mask = early_energy < window_sample_size * 1e-5 * torch.max(
-            early_energy
-        )  # Discard windows with very low energy
+        discard_mask = early_energy < 1e-3 * torch.max(early_energy)
+        # Discard windows with very low energy (around 0.1% of the max energy)
         early_energy = early_energy[~discard_mask]
         late_energy = late_energy[~discard_mask]
         scale_estimates = early_energy / (late_energy + 1e-8)

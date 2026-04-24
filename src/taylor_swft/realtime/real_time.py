@@ -189,6 +189,8 @@ class SWFTContext:
         self.input_circular_buffer.append(input_buffer)
 
         modes_ir = self.rev.get_modes_at_point(mic_pos)
+        modes_ir = modes_ir / torch.norm(modes_ir, dim=-1, keepdim=True)
+        # normalize the modes to avoid overwriting the scaling factor of the late reverberation when blending with the early echoes
 
         if torch.norm(torch.tensor(source_pos - mic_pos)) < 0.5:
             # If the source is very close to the microphone, we move it slightly to avoid numerical issues in the ISM computation of early echoes
