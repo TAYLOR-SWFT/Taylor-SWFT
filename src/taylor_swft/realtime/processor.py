@@ -73,6 +73,7 @@ class TaylorSWFTRealTimeProcessor:
         )
         self.conductor = threading.Thread(target=self.run_conductor)
         self.is_mode_set = False
+        self.first_buffer_processed = False
 
     def plot_trajectories(self):
         """Plot microphone and source trajectories after processing.
@@ -172,10 +173,16 @@ class TaylorSWFTRealTimeProcessor:
             def reverb_callback(outdata, frames, time, status):
                 if status:
                     print(status)
+
+                while len(self.swft_thread.swft_context.output_queue) == 0 and not self.first_buffer_processed:
+                    # Wait for the first buffer to be processed before starting playback
+                    sleep(0.0001)
                 if len(self.swft_thread.swft_context.output_queue) > 0:
                     outdata[:] = self.swft_thread.get_next_output_buffer()
+                    self.first_buffer_processed = True
                 else:
                     print("Output queue is empty")
+                    outdata[:] = np.zeros((frames, self.n_channels), dtype="float32")
 
             self.output_stream = OutputStream(
                 samplerate=self.audio_sr,
@@ -194,12 +201,10 @@ class TaylorSWFTRealTimeProcessor:
         and graphics update threads at fixed time intervals matching buffer duration.
         """
         self.stop_flag = False
-        eps = 0.0001
         while not self.stop_flag:
             self.synchro_flag.clear()
             sleep(self.audio_buffer_dur)
             self.synchro_flag.set()
-            # sleep(eps)
         self.synchro_flag.clear()
 
     def stop_conductor(self):
@@ -248,9 +253,6 @@ class TaylorSWFTRealTimeProcessor:
             )
         try:
             self.swft_thread.start()
-            if hasattr(self, "output_stream"):
-                self.output_stream.__enter__()
-
             if hasattr(self, "graphics_thread"):
                 self.graphics_thread.start()
 
@@ -264,6 +266,9 @@ class TaylorSWFTRealTimeProcessor:
                 # If no graphics or output stream,
                 # just run the audio processing without synchronization
                 self.synchro_flag.set()
+
+            if hasattr(self, "output_stream"):
+                self.output_stream.__enter__()
 
             if hasattr(self, "graphics_thread"):
                 self.graphics_thread.monitor_show()
