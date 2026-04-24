@@ -8,6 +8,7 @@ import numpy as np
 import queue
 import threading
 import torch
+from numpy.typing import NDArray
 
 
 class SWFTThread:
@@ -168,7 +169,7 @@ class SWFTThread:
         self.error_bin = queue.Queue()
         self.input_buffer_generator = self.get_input_buffer_generator()
 
-    def get_current_mic_and_source_positions(self) -> tuple[PointType, PointType]:
+    def get_current_mic_and_source_positions(self) -> tuple[NDArray, NDArray]:
         """Get next mic and source positions (interactive or trajectory).
 
         Returns:
@@ -177,8 +178,8 @@ class SWFTThread:
         Raises:
             RuntimeError: If position method not set.
         """
-        mic_pos: PointType
-        source_pos: PointType
+        mic_pos: NDArray
+        source_pos: NDArray
 
         if self.get_positions_method == "interactive":
             mic_pos = self.graphics_context.microphone_coordinates.copy()
