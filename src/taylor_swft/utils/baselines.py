@@ -4,6 +4,7 @@ from .custom_typing import PointType, baseline_func_type
 from .utils import get_ism_order
 from pyroomacoustics.parameters import constants as pra_constants
 from pyroomacoustics.simulation import compute_ism_rir, compute_rt_rir
+from pyroomacoustics.soundsource import SoundSource
 from scipy.interpolate import PchipInterpolator
 from torch import Tensor
 from typing import cast
@@ -67,11 +68,12 @@ def rir_ism(
     if len(room.room.sources) == 0:
         room.room.add_source(source_pos)
     else:
-        room.room.sources[0].position = source_pos
+        room.room.sources[0] = SoundSource(position=source_pos)
 
     o = get_ism_order(len(room.room.walls), kwargs.get("wanted_sources", int(1e9)))
     room.room.max_order = o
-    room.room._update_room_engine_params()
+    room.room._init_room_engine()
+    room.room.room_engine.add_mic(room.room.mic_array.R[:, None, 0])
     room.room.image_source_model()
     visibility = cast(list[np.ndarray], room.room.visibility)
     ir_ism = compute_ism_rir(
@@ -120,7 +122,10 @@ def rir_rt(
     if len(room.room.sources) == 0:
         room.room.add_source(source_pos)
     else:
-        room.room.sources[0].position = source_pos
+        room.room.sources[0] = SoundSource(position=source_pos)
+
+    room.room._init_room_engine()
+    room.room.room_engine.add_mic(room.room.mic_array.R[:, None, 0])
 
     room.room._set_ray_tracing_options(
         use_ray_tracing=True,
