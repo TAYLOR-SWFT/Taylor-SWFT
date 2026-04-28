@@ -280,7 +280,11 @@ def distance(rir_ref: Tensor, rir_other: Tensor, sample_rate: int) -> dict[str, 
 
     # Pad the shorter RIR
     pad_other = rir_ref.shape[-1] - rir_other.shape[-1]
-    rir_other_padded = pad(rir_other / rir_other.abs().max(), (0, pad_other))
+
+    if rir_other.abs().max() > 1e-6:
+        rir_other_padded = pad(rir_other / rir_other.abs().max(), (0, pad_other))
+    else:
+        rir_other_padded = pad(rir_other, (0, pad_other))
 
     metrics_ref = evaluate(rir_ref / rir_ref.abs().max(), sample_rate)
     metrics_other = evaluate(rir_other_padded, sample_rate)
