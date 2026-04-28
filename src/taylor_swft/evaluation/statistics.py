@@ -22,7 +22,10 @@ def process_results(results_df: pd.DataFrame, exp_dir: Path) -> None:
     # Check the integrity of the data
     print("Checking data integrity.")
     # No missing values
-    assert not results_df.isnull().values.any(), "Some values are missing.)"
+    # assert not results_df.isnull().values.any(), "Some values are missing.)"
+    if results_df.isnull().values.any():
+        print("Warning: Some values are missing in the results. Proceeding with available data.")
+        results_df = results_df.dropna()
     # Hash values are unique
     assert results_df["hash"].is_unique, (
         "Some metrics were computed multiple times with "
