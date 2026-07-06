@@ -354,7 +354,7 @@ class Reverberator:
             Tensor containing the complete impulse response at the point.
         """
         freq_ir = self.get_modes_at_point(point)
-        late = convolve(freq_ir, self.late_rir)
+        late = convolve(freq_ir.to(self.late_rir), self.late_rir)
         early = self.get_early_echoes_at_point(
             point,
             reflection_order=order,
