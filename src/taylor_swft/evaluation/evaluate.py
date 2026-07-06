@@ -231,3 +231,45 @@ def run_BRAS_eval(
         material_types="initial",
     )
     evaluate(swft_dataset, exp_dir, recompute_metrics)
+
+def detail_computation_times_on_BRAS_CR3():
+    import torch
+    from taylor_swft import Reverberator, SWFTContext
+    from taylor_swft.room.datasets import BRASBenchmarkToSWFTRoom
+    from tqdm import tqdm
+
+    FS = 16000
+    BUFFER_DUR = 30e-3
+
+    bras_swft_rooms = BRASBenchmarkToSWFTRoom(ignore_keys=['CR1', 'CR2', 'CR4'], pyroomacoustics_max_order=0, fs=FS)
+    initial_swft_room = bras_swft_rooms[0]['swft_room']
+    reverb = Reverberator(initial_swft_room)
+    swft_context = SWFTContext(rev=reverb, buffer_dur=BUFFER_DUR, n_channels=1, reflection_order=1, device="cuda", overlap=True)
+    buffer_size = int(BUFFER_DUR * FS)
+    i = 0
+    print("Starting real-time processing of BRAS CR3 scenes to detail computation times...")
+    for scene in tqdm(iter(bras_swft_rooms), total=len(bras_swft_rooms)):
+        receiver_position = scene['receiver_position']
+        source_position = scene['source_position']
+
+        input_buffer = torch.randn(buffer_size, 1)
+        i += 1
+        output_buffer = swft_context.process_next_buffer(input_buffer, mic_pos=receiver_position, source_pos=source_position, measure_perf=True)
+
+    total_times = torch.tensor(swft_context.debug_info["total_processing_time"])
+    early_times = torch.tensor(swft_context.debug_info["early_echoes_time"])
+    late_times = torch.tensor(swft_context.debug_info["late_coloration_time"])
+
+    mean_total_times = total_times.mean()
+    std_total_times = total_times.std()
+    mean_early_times = early_times.mean()
+    std_early_times = early_times.std()
+    mean_late_times = late_times.mean()
+    std_late_times = late_times.std()
+
+    percentage_early = torch.tensor(swft_context.debug_info["early_echoes_time"]).sum() / torch.tensor(swft_context.debug_info["total_processing_time"]).sum() * 100
+
+    print(f"Mean ± std real-time total computation time: {mean_total_times:.4f} ± {std_total_times:.4f} s")
+    print(f"Mean ± std real-time early echoes computation time: {mean_early_times:.4f} ± {std_early_times:.4f} s")
+    print(f"Mean ± std real-time late coloration computation time: {mean_late_times:.4f} ± {std_late_times:.4f} s")
+    print(f"Percentage of early echoes computation time: {percentage_early:.2f} %")

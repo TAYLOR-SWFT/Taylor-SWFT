@@ -4,6 +4,7 @@ from torch import Tensor
 from torchaudio.functional import fftconvolve
 import torch
 from numpy.typing import NDArray
+from time import perf_counter
 
 
 def convolve_one_buffer(source: Tensor, ir: Tensor, buffer_size: int) -> Tensor:
@@ -161,9 +162,14 @@ class SWFTContext:
         self.previous_output_chunk = torch.zeros((self.buffer_size), device=device)
         self.overlap = overlap
         self.output_queue = []
+        self.debug_info = {
+            "early_echoes_time": [],
+            "late_coloration_time": [],
+            "total_processing_time": [],
+        }
 
     def process_next_buffer(
-        self, input_buffer: Tensor, mic_pos: NDArray, source_pos: NDArray
+        self, input_buffer: Tensor, mic_pos: NDArray, source_pos: NDArray, measure_perf: bool = False
     ) -> Tensor:
         """
         Process the next audio buffer.
@@ -174,7 +180,7 @@ class SWFTContext:
         Returns:
             Processed audio buffer.
         """
-
+        tik_start = perf_counter()
         assert (
             input_buffer.shape[0] == self.buffer_size
         ), f"Input buffer size must be equal to {self.buffer_size} samples."
@@ -205,12 +211,15 @@ class SWFTContext:
                 random_direction /= torch.norm(random_direction)
                 source_pos = mic_pos + random_direction.numpy() * 0.5
 
+        tik = perf_counter()
         early_echoes_ir = self.rev.get_early_echoes_at_point(
             mic_pos,
             source_pos,
             method="ism",
             reflection_order=self.reflection_order,
         )
+        tok = perf_counter()
+        time_early_echoes = tok - tik
 
         # clamp the early echoes to avoid extreme values whene the source is very close to the microphone
         early_echoes_ir = torch.clamp(early_echoes_ir, -0.3, 0.3)
@@ -256,6 +265,12 @@ class SWFTContext:
         self.output_queue.append(
             output_buffer[: self.buffer_size].unsqueeze(-1).cpu().numpy()
         )
+        tok_end = perf_counter()
+        if measure_perf:
+            time_total = tok_end - tik_start
+            self.debug_info["early_echoes_time"].append(time_early_echoes)
+            self.debug_info["late_coloration_time"].append(time_total - time_early_echoes)
+            self.debug_info["total_processing_time"].append(time_total)
         return output_buffer[: self.buffer_size]
 
     def get_next_output_buffer(self) -> Tensor:
