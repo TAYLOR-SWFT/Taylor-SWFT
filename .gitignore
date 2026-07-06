@@ -5,6 +5,7 @@
 **/*.pyd
 **/*.egg-info
 **/*pytest_cache
+uv.lock
 
 # [Data files]
 data/*

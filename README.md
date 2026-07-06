@@ -14,6 +14,10 @@ git clone https://github.com/TAYLOR-SWFT/Taylor-SWFT.git
 ```
 Install the package:
 ```sh
+uv sync --all-extras
+```
+or using conda (deprecated, uv is the recommended way):
+```sh
 conda env create -f conda_env.yaml
 ```
 
