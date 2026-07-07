@@ -1,5 +1,6 @@
 from ..room.datasets import BRASBenchmarkToSWFTRoom, BRASItemSWFTRoom
 from ..utils.baselines import ALL_BASELINES, BASELINE_KWARGS
+from ..utils.utils import get_ism_order
 from .metrics import distance
 from pathlib import Path
 from time import perf_counter
@@ -208,6 +209,22 @@ def evaluate(
     clean_csv(results_file)
 
 
+def get_all_ism_order(dataset: BRASBenchmarkToSWFTRoom) -> pd.DataFrame:
+    """Print the ISM order for each room in the dataset.
+
+    Args:
+        dataset: The BRAS to SWFT dataset loader.
+    """
+    all_faces_dict = dataset.dataset.get_faces()
+    for baseline, kwargs in BASELINE_KWARGS.items():
+        if "ism" in baseline.lower():
+            wanted_sources = kwargs.get("wanted_sources")
+            for faces_dict in all_faces_dict.values():
+                o = get_ism_order(faces_dict["n_faces"], wanted_sources)
+                faces_dict[f"{baseline}_order"] = o
+    return pd.DataFrame(all_faces_dict)
+
+
 def run_BRAS_eval(
     data_dir: Path, exp_dir: Path, recompute_metrics: bool = False
 ) -> None:
@@ -230,7 +247,16 @@ def run_BRAS_eval(
         fs=32000,
         material_types="initial",
     )
+    ism_orders = get_all_ism_order(swft_dataset)
+
+    for baseline, kwargs in BASELINE_KWARGS.items():
+        if "ism" in baseline.lower():
+            wanted_sources = kwargs.get("wanted_sources")
+            print(f"{baseline} with wanted_sources = {wanted_sources:.0e}:")
+    print("ISM orders for each room and baseline:")
+    print(ism_orders)
     evaluate(swft_dataset, exp_dir, recompute_metrics)
+
 
 def detail_computation_times_on_BRAS_CR3():
     import torch
@@ -241,20 +267,36 @@ def detail_computation_times_on_BRAS_CR3():
     FS = 16000
     BUFFER_DUR = 30e-3
 
-    bras_swft_rooms = BRASBenchmarkToSWFTRoom(ignore_keys=['CR1', 'CR2', 'CR4'], pyroomacoustics_max_order=0, fs=FS)
-    initial_swft_room = bras_swft_rooms[0]['swft_room']
+    bras_swft_rooms = BRASBenchmarkToSWFTRoom(
+        ignore_keys=["CR1", "CR2", "CR4"], pyroomacoustics_max_order=0, fs=FS
+    )
+    initial_swft_room = bras_swft_rooms[0]["swft_room"]
     reverb = Reverberator(initial_swft_room)
-    swft_context = SWFTContext(rev=reverb, buffer_dur=BUFFER_DUR, n_channels=1, reflection_order=1, device="cuda", overlap=True)
+    swft_context = SWFTContext(
+        rev=reverb,
+        buffer_dur=BUFFER_DUR,
+        n_channels=1,
+        reflection_order=1,
+        device="cuda",
+        overlap=True,
+    )
     buffer_size = int(BUFFER_DUR * FS)
     i = 0
-    print("Starting real-time processing of BRAS CR3 scenes to detail computation times...")
+    print(
+        "Starting real-time processing of BRAS CR3 scenes to detail computation times..."
+    )
     for scene in tqdm(iter(bras_swft_rooms), total=len(bras_swft_rooms)):
-        receiver_position = scene['receiver_position']
-        source_position = scene['source_position']
+        receiver_position = scene["receiver_position"]
+        source_position = scene["source_position"]
 
         input_buffer = torch.randn(buffer_size, 1)
         i += 1
-        output_buffer = swft_context.process_next_buffer(input_buffer, mic_pos=receiver_position, source_pos=source_position, measure_perf=True)
+        output_buffer = swft_context.process_next_buffer(
+            input_buffer,
+            mic_pos=receiver_position,
+            source_pos=source_position,
+            measure_perf=True,
+        )
 
     total_times = torch.tensor(swft_context.debug_info["total_processing_time"])
     early_times = torch.tensor(swft_context.debug_info["early_echoes_time"])
@@ -267,9 +309,19 @@ def detail_computation_times_on_BRAS_CR3():
     mean_late_times = late_times.mean()
     std_late_times = late_times.std()
 
-    percentage_early = torch.tensor(swft_context.debug_info["early_echoes_time"]).sum() / torch.tensor(swft_context.debug_info["total_processing_time"]).sum() * 100
+    percentage_early = (
+        torch.tensor(swft_context.debug_info["early_echoes_time"]).sum()
+        / torch.tensor(swft_context.debug_info["total_processing_time"]).sum()
+        * 100
+    )
 
-    print(f"Mean ± std real-time total computation time: {mean_total_times:.4f} ± {std_total_times:.4f} s")
-    print(f"Mean ± std real-time early echoes computation time: {mean_early_times:.4f} ± {std_early_times:.4f} s")
-    print(f"Mean ± std real-time late coloration computation time: {mean_late_times:.4f} ± {std_late_times:.4f} s")
+    print(
+        f"Mean ± std real-time total computation time: {mean_total_times:.4f} ± {std_total_times:.4f} s"
+    )
+    print(
+        f"Mean ± std real-time early echoes computation time: {mean_early_times:.4f} ± {std_early_times:.4f} s"
+    )
+    print(
+        f"Mean ± std real-time late coloration computation time: {mean_late_times:.4f} ± {std_late_times:.4f} s"
+    )
     print(f"Percentage of early echoes computation time: {percentage_early:.2f} %")

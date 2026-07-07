@@ -263,6 +263,13 @@ class BRASBenchmarkDataset(Dataset):
                         material_properties[material_name] = material
         return material_properties
 
+    def get_faces(self):
+        """Retrieve the number of faces for each room in the dataset."""
+        face_counts = {
+            key: {"n_faces": len(val["faces"])} for key, val in self.mesh_dict.items()
+        }
+        return face_counts
+
     def check_mesh_consistency(
         self,
         mesh: MeshType,
