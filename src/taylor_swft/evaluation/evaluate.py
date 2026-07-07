@@ -226,7 +226,10 @@ def get_all_ism_order(dataset: BRASBenchmarkToSWFTRoom) -> pd.DataFrame:
 
 
 def run_BRAS_eval(
-    data_dir: Path, exp_dir: Path, recompute_metrics: bool = False
+    data_dir: Path,
+    exp_dir: Path,
+    recompute_metrics: bool = False,
+    ignore_keys: list[str] = [],
 ) -> None:
     """Run a complete evaluation pipeline on the BRAS Benchmark dataset.
 
@@ -246,6 +249,7 @@ def run_BRAS_eval(
         base_data_path=data_dir,
         fs=32000,
         material_types="initial",
+        ignore_keys=ignore_keys,
     )
     ism_orders = get_all_ism_order(swft_dataset)
 
