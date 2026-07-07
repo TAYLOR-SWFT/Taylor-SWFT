@@ -1,10 +1,11 @@
 from ..core.taylor_swft import Reverberator
-from ..room.spatial_model import SWFTRoom
+from ..room.spatial_model import SWFTRoom, RoomEngine
 from .custom_typing import PointType, baseline_func_type
 from .utils import get_ism_order
 from pyroomacoustics.parameters import constants as pra_constants
 from pyroomacoustics.simulation import compute_ism_rir, compute_rt_rir
 from pyroomacoustics.soundsource import SoundSource
+from pyroomacoustics.beamforming import MicrophoneArray
 from scipy.interpolate import PchipInterpolator
 from torch import Tensor
 from typing import cast
@@ -69,10 +70,12 @@ def rir_ism(
         room.room.add_source(source_pos)
     else:
         room.room.sources[0] = SoundSource(position=source_pos)
+    room.room.mic_array = cast(MicrophoneArray, room.room.mic_array)
 
     o = get_ism_order(len(room.room.walls), kwargs.get("wanted_sources", int(1e9)))
     room.room.max_order = o
     room.room._init_room_engine()
+    room.room.room_engine = cast(RoomEngine, room.room.room_engine)
     room.room.room_engine.add_mic(room.room.mic_array.R[:, None, 0])
     room.room.image_source_model()
     visibility = cast(list[np.ndarray], room.room.visibility)
@@ -117,6 +120,7 @@ def rir_rt(
         room.room.add_microphone(mic_pos)
     else:
         room.room.mic_array.R[:, 0] = mic_pos
+    room.room.mic_array = cast(MicrophoneArray, room.room.mic_array)
 
     # Set the source position
     if len(room.room.sources) == 0:
@@ -125,6 +129,7 @@ def rir_rt(
         room.room.sources[0] = SoundSource(position=source_pos)
 
     room.room._init_room_engine()
+    room.room.room_engine = cast(RoomEngine, room.room.room_engine)
     room.room.room_engine.add_mic(room.room.mic_array.R[:, None, 0])
 
     room.room._set_ray_tracing_options(
@@ -217,7 +222,7 @@ ALL_BASELINES: dict[str, baseline_func_type] = {
 
 BASELINE_KWARGS = {
     "ism_rt": {"wanted_sources": int(1e6), "n_rays": 5000, "receiver_radius": 0.5},
-    "ism": {"wanted_sources": int(1e10)},
+    "ism": {"wanted_sources": int(7e9)},
     "noise": {},
     "rt": {"n_rays": 5000, "receiver_radius": 0.5},
     "taylor_swft": {"wanted_sources": int(1e6)},

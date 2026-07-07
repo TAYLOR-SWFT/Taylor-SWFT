@@ -8,6 +8,13 @@ import pyroomacoustics as pra
 import warnings
 
 
+# Dummy class for typing purposes. The actual implementation is a C lib
+class RoomEngine:
+    def add_mic(self, mic_pos: npt.NDArray[np.float32]) -> None:
+        """Add a microphone to the room engine at the specified position."""
+        pass
+
+
 def compute_log_conductance_from_admittances(
     admittances: list[complex] | npt.NDArray[np.complex64],
 ) -> npt.NDArray[np.complex64]:
