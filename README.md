@@ -23,66 +23,7 @@ conda env create -f conda_env.yaml
 
 # Run our experiments
 
-You can download the BRAS benchmark dataset [here](https://depositonce.tu-berlin.de/items/38410727-febb-4769-8002-9c710ba393c4/full). In the paper, we used rooms from CR1 to CR4. Put them in the `data` folder (or any other one) following this structure:
-
-```
-data/BRAS/
-├── 1_scene_descriptions-CR1
-│   └── 1 Scene descriptions
-│       └── CR1 coupled rooms (laboratory and reverberation chamber)
-│           ├── BRIRs
-│           │   └── wav
-│           ├── Geometry
-│           │   └── rooms
-│           ├── Pictures
-│           │   └── Details
-│           └── RIRs
-│               └── wav
-├── 1_scene_descriptions-CR2
-│   └── 1 Scene descriptions
-│       └── CR2 small room (seminar room)
-│           ├── BRIRs
-│           │   └── wav
-│           ├── Geometry
-│           ├── Pictures
-│           │   └── Details
-│           └── RIRs
-│               └── wav
-├── 1_scene_descriptions-CR3
-│   └── 1 Scene descriptions
-│       └── CR3 medium room (chamber music hall)
-│           ├── BRIRs
-│           │   └── wav
-│           ├── Geometry
-│           ├── Pictures
-│           │   └── Details
-│           └── RIRs
-│               └── wav
-├── 1_scene_descriptions-CR4
-│   └── 1 Scene descriptions
-│       └── CR4 large room (auditorium)
-│           ├── BRIRs
-│           │   └── wav
-│           ├── Geometry
-│           ├── Pictures
-│           │   └── Details
-│           └── RIRs
-│               └── wav
-├── 3_surface_descriptions
-│    └── 3 Surface descriptions
-│        ├── _csv
-│        │   ├── fitted_estimates
-│        │   └── initial_estimates
-│        ├── _descr
-│        ├── _img
-│        └── _plots
-├── mesh_data.json
-└── source_receiver_positions.json
-```
-For any question about `mesh_data.json` and `source_receiver_positions.json`, please contact us._
-
-When everything is installed, you can run `pytest` to ensure the installation is correct and then run the `main` file. 
-_For faster runs you can lower the number of wanted sources for the ISM baseline._
+**To reproduce results from our paper [Taylor-SWFT: Fast Discrete Statistical Wave Field Theory Using Taylor Expansion For Late Reverberation](https://hal.science/hal-05600183), please install [this version](https://github.com/TAYLOR-SWFT/Taylor-SWFT/tree/forum_acusticum2026) of the code.**
 
 # Reference
 If this work has been useful to you, please cite [this paper](https://hal.science/hal-05600183):
